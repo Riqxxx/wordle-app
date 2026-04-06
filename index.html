@@ -19,7 +19,7 @@
         }
         header {
             text-align: center; 
-            padding: 12px; 
+            padding: 11px; 
             font-size: 21px; 
             background: #1f1f1f;
         }
@@ -27,7 +27,7 @@
             display: grid; 
             grid-template-columns: repeat(5, 1fr); 
             gap: 6px;
-            padding: 15px; 
+            padding: 14px; 
             max-width: 340px; 
             margin: 0 auto;
         }
@@ -46,25 +46,25 @@
         .tile.present { background: #b59f3b; border-color: #b59f3b; color: #fff; }
         .tile.absent { background: #3a3a3c; border-color: #3a3a3c; color: #fff; }
 
-        /* Компактная клавиатура для средних телефонов */
+        /* ЕЩЁ МЕНЬШЕ — для средних телефонов */
         .keyboard {
-            padding: 6px 4px 10px; 
+            padding: 5px 3px 8px; 
             background: #1f1f1f; 
             margin-top: auto;
         }
         .row {
             display: flex; 
             justify-content: center; 
-            gap: 3px; 
-            margin-bottom: 4px;
+            gap: 2.5px; 
+            margin-bottom: 3px;
         }
         .key {
             background: #3a3a3c; 
             color: #fff; 
-            padding: 9px 5px; 
-            font-size: 14.5px;
-            min-width: 23px; 
-            height: 38px;
+            padding: 7px 4px; 
+            font-size: 13.8px;
+            min-width: 22px; 
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -72,13 +72,13 @@
             border-radius: 4px; 
             cursor: pointer;
             user-select: none; 
-            box-shadow: 0 2px 0 #222;
+            box-shadow: 0 1.5px 0 #222;
             font-weight: 500;
         }
         .key.wide { 
-            min-width: 40px; 
-            font-size: 13px; 
-            padding: 9px 4px;
+            min-width: 38px; 
+            font-size: 12.5px; 
+            padding: 7px 3px;
         }
         .key.used { 
             background: #555 !important; 
@@ -87,7 +87,7 @@
 
         #message {
             text-align: center; 
-            padding: 8px; 
+            padding: 7px; 
             font-size: 17px; 
             min-height: 26px;
         }
@@ -109,14 +109,14 @@
         #result.show { display: flex; }
         #result h2 { font-size: 27px; margin: 10px 0; }
         #result p { 
-            font-size: 21.5px; 
-            margin: 15px 0; 
-            line-height: 1.45; 
+            font-size: 21px; 
+            margin: 14px 0; 
+            line-height: 1.4; 
         }
         #play-again {
-            margin-top: 25px; 
-            padding: 14px 32px; 
-            font-size: 17.5px;
+            margin-top: 22px; 
+            padding: 13px 30px; 
+            font-size: 17px;
             background: #538d4e; 
             color: white; 
             border: none; 
@@ -171,7 +171,7 @@
             "Маргоша у тебя всё получится! 😉"
         ];
 
-        // Создаём игровое поле
+        // Создаём сетку
         for (let i = 0; i < 25; i++) {
             const tile = document.createElement('div');
             tile.className = 'tile';
@@ -179,7 +179,7 @@
         }
         const tiles = document.querySelectorAll('.tile');
 
-        // Раскладка клавиатуры
+        // Клавиатура
         const layout = [
             ["Й","Ц","У","К","Е","Н","Г","Ш","Щ","З","Х","Ъ"],
             ["Ф","Ы","В","А","П","Р","О","Л","Д","Ж","Э"],
@@ -244,7 +244,6 @@
             const letterCount = {};
             for (let char of targetWord) letterCount[char] = (letterCount[char] || 0) + 1;
 
-            // Сначала правильные буквы (зелёные)
             for (let i = 0; i < 5; i++) {
                 const tile = tiles[rowStart + i];
                 const letter = currentGuess[i];
@@ -255,7 +254,6 @@
                 }
             }
 
-            // Потом жёлтые и серые
             for (let i = 0; i < 5; i++) {
                 const tile = tiles[rowStart + i];
                 const letter = currentGuess[i];
@@ -330,17 +328,14 @@
             resultScreen.classList.add('show');
         }
 
-        // Кнопка играть снова
         document.getElementById('play-again').onclick = () => {
             location.reload();
         };
 
-        // Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
 
-        // Запуск игры
         createKeyboard();
         showMessage('Угадайте слово за 5 попыток!', '#fff');
     </script>
