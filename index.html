@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wordle</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { margin:0; padding:0; background:#121213; color:#fff; font-family:Arial, sans-serif; display:flex; flex-direction:column; height:100vh; }
+        header { text-align:center; padding:15px; font-size:24px; background:#1f1f1f; }
+        .grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:5px; padding:20px; max-width:350px; margin:0 auto; }
+        .tile { width:60px; height:60px; border:2px solid #3a3a3c; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:bold; text-transform:uppercase; }
+        .tile.correct { background:#538d4e; border-color:#538d4e; color:#fff; }
+        .tile.present { background:#b59f3b; border-color:#b59f3b; color:#fff; }
+        .tile.absent { background:#3a3a3c; border-color:#3a3a3c; color:#fff; }
+        .keyboard { padding:10px; background:#1f1f1f; }
+        .row { display:flex; justify-content:center; gap:4px; margin-bottom:6px; }
+        .key { background:#3a3a3c; color:#fff; padding:12px 10px; font-size:18px; min-width:32px; text-align:center; border-radius:4px; cursor:pointer; user-select:none; }
+        .key.wide { min-width:52px; }
+        .key.correct { background:#538d4e; }
+        .key.present { background:#b59f3b; }
+        .key.absent { background:#3a3a3c; }
+        #message { text-align:center; padding:10px; font-size:18px; min-height:28px; }
+    </style>
+</head>
+<body>
+    <header>Wordle ✨</header>
+    <div id="message"></div>
+    <div class="grid" id="grid"></div>
+    
+    <div class="keyboard">
+        <div class="row" id="row1"></div>
+        <div class="row" id="row2"></div>
+        <div class="row" id="row3"></div>
+    </div>
+
+    <script>
+        // === ВАШ СПИСОК СЛОВ (обновляйте через convert_words.py) ===
+        const words = ["абзац", "аванс", "автор", "агент", "адрес", "азарт", "актер", "алмаз", "амбар", "ангел", "ангар", "апорт", "арена", "арест", "аркан", "арсен", "атака", "атлас", "афиша", "бабка", "базар", "байка", "балет", "балка", "банан", "банка", "баржа", "барон", "басня", "батон", "бегун", "бедро", "берег", "берет", "бетон", "бидон", "бизон", "бисер", "бобер", "бокал", "бомба", "боров", "ботва", "брага", "бровь", "броня", "буква", "булка", "буран", "буфер", "вагон", "валет", "ванна", "ведро", "веник", "ветер", "взвод", "взрыв", "вилка", "вирус", "виток", "вклад", "водка", "волна", "ворот", "вывод", "выгон", "вынос", "вырез", "газон", "гайка", "галка", "галоп", "гамма", "гараж", "гений", "герой", "глава", "глина", "голос", "гонка", "город", "гость", "грань", "грипп", "давка", "дамба", "дверь", "дебют", "девиз", "диета", "длина", "дождь", "доска", "доход", "драка", "дрель", "жатва", "забой", "завод", "загон", "зажим", "закон", "замок", "запах", "заряд", "зверь", "земля", "зенит", "зерно", "идеал", "искра", "кабан", "казна", "калач", "канал", "капля", "карта", "касса", "кепка", "кивок", "кисть", "класс", "книга", "ковер", "козел", "койка", "кокос", "колба", "комар", "короб", "крест", "кровь", "крыло", "крыша", "кулак", "купол", "кусок", "кухня", "лавка", "лампа", "лента", "лимон", "лодка", "ложка", "марка", "маска", "масло", "место", "мороз", "навык", "нагар", "налог", "наряд", "насос", "наука", "нефть", "огонь", "озеро", "олень", "омлет", "опора", "осень", "отказ", "отряд", "охота", "пакет", "палец", "палка", "парус", "паста", "пачка", "певец", "песок", "петля", "пирог", "пламя", "плата", "плечо", "плита", "побег", "повод", "поезд", "покой", "поток", "почва", "право", "пресс", "проба", "пушка", "пчела", "пятно", "рубль", "рынок", "салат", "сахар", "свеча", "свист", "связь", "седло", "сезон", "семья", "скала", "склон", "сосна", "спина", "спорт", "стадо", "старт", "ствол", "стена", "страх", "сцена", "танец", "топор", "точка", "трава", "тропа", "труба", "туман", "улица", "фильм", "фокус", "форма", "фронт", "фрукт", "хвост", "холод", "чашка", "число", "чулок", "школа", "шутка", "ягода"]; 
+        // ↑↑↑ Замените на const words = [...] из вашего convert_words.py
+
+        let targetWord = words[Math.floor(Math.random() * words.length)].toUpperCase();
+        let currentRow = 0;
+        let currentGuess = [];
+        let gameOver = false;
+
+        const grid = document.getElementById('grid');
+        const messageEl = document.getElementById('message');
+
+        // Создаём сетку 5×5 (5 попыток)
+        for (let i = 0; i < 25; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            grid.appendChild(tile);
+        }
+
+        const tiles = document.querySelectorAll('.tile');
+
+        // Русская клавиатура
+        const layout = [
+            ["Й","Ц","У","К","Е","Н","Г","Ш","Щ","З","Х","Ъ"],
+            ["Ф","Ы","В","А","П","Р","О","Л","Д","Ж","Э"],
+            ["Я","Ч","С","М","И","Т","Ь","Б","Ю","Ё"]
+        ];
+
+        function createKeyboard() {
+            const rows = document.querySelectorAll('.row');
+            layout.forEach((rowKeys, idx) => {
+                const rowDiv = rows[idx];
+                rowDiv.innerHTML = '';
+                rowKeys.forEach(letter => {
+                    const key = document.createElement('div');
+                    key.className = 'key';
+                    key.textContent = letter;
+                    key.onclick = () => handleInput(letter);
+                    rowDiv.appendChild(key);
+                });
+            });
+
+            // Enter и Backspace в третьей строке
+            const row3 = rows[2];
+            const enter = document.createElement('div');
+            enter.className = 'key wide';
+            enter.textContent = 'Enter';
+            enter.onclick = handleEnter;
+            row3.prepend(enter);
+
+            const back = document.createElement('div');
+            back.className = 'key wide';
+            back.textContent = '⌫';
+            back.onclick = handleBackspace;
+            row3.appendChild(back);
+        }
+
+        function handleInput(letter) {
+            if (gameOver || currentGuess.length >= 5) return;
+            currentGuess.push(letter);
+            updateGrid();
+        }
+
+        function handleBackspace() {
+            if (gameOver) return;
+            currentGuess.pop();
+            updateGrid();
+        }
+
+        function handleEnter() {
+            if (gameOver) return;
+            if (currentGuess.length !== 5) {
+                showMessage('Нужно 5 букв!', 'red');
+                return;
+            }
+
+            const guess = currentGuess.join('');
+            if (!words.map(w => w.toUpperCase()).includes(guess)) {
+                showMessage('Слова нет в списке!', 'red');
+                return;
+            }
+
+            // Проверка
+            const rowStart = currentRow * 5;
+            const letterCount = {};
+            for (let char of targetWord) letterCount[char] = (letterCount[char] || 0) + 1;
+
+            // Сначала зелёные
+            for (let i = 0; i < 5; i++) {
+                const tile = tiles[rowStart + i];
+                const letter = currentGuess[i];
+                if (letter === targetWord[i]) {
+                    tile.classList.add('correct');
+                    updateKeyboard(letter, 'correct');
+                    letterCount[letter]--;
+                }
+            }
+
+            // Потом жёлтые и красные
+            for (let i = 0; i < 5; i++) {
+                const tile = tiles[rowStart + i];
+                const letter = currentGuess[i];
+                if (tile.classList.contains('correct')) continue;
+
+                if (targetWord.includes(letter) && letterCount[letter] > 0) {
+                    tile.classList.add('present');
+                    updateKeyboard(letter, 'present');
+                    letterCount[letter]--;
+                } else {
+                    tile.classList.add('absent');
+                    updateKeyboard(letter, 'absent');
+                }
+            }
+
+            // Победа
+            if (guess === targetWord) {
+                gameOver = true;
+                showMessage('Поздравляем! 🎉', '#538d4e');
+                return;
+            }
+
+            currentRow++;
+            currentGuess = [];
+
+            // Поражение
+            if (currentRow >= 5) {
+                gameOver = true;
+                showMessage(`Поражение. Слово: ${targetWord}`, 'red');
+            }
+        }
+
+        function updateGrid() {
+            const rowStart = currentRow * 5;
+            for (let i = 0; i < 5; i++) {
+                const tile = tiles[rowStart + i];
+                tile.textContent = currentGuess[i] || '';
+                tile.classList.remove('correct', 'present', 'absent');
+            }
+        }
+
+        function updateKeyboard(letter, status) {
+            const keys = document.querySelectorAll('.key');
+            for (let key of keys) {
+                if (key.textContent === letter) {
+                    if (status === 'correct') key.classList.add('correct');
+                    else if (status === 'present' && !key.classList.contains('correct')) key.classList.add('present');
+                    else if (status === 'absent' && !key.classList.contains('correct') && !key.classList.contains('present')) key.classList.add('absent');
+                }
+            }
+        }
+
+        function showMessage(text, color) {
+            messageEl.style.color = color;
+            messageEl.textContent = text;
+            setTimeout(() => { messageEl.textContent = ''; }, 2500);
+        }
+
+        // Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Запуск
+        createKeyboard();
+        showMessage('Угадайте слово за 5 попыток!', '#fff');
+    </script>
+</body>
+</html>
