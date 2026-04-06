@@ -46,7 +46,7 @@
         .tile.present { background: #b59f3b; border-color: #b59f3b; color: #fff; }
         .tile.absent { background: #3a3a3c; border-color: #3a3a3c; color: #fff; }
 
-        /* ЕЩЁ МЕНЬШЕ — для средних телефонов */
+        /* Компактная клавиатура */
         .keyboard {
             padding: 5px 3px 8px; 
             background: #1f1f1f; 
@@ -74,13 +74,22 @@
             user-select: none; 
             box-shadow: 0 1.5px 0 #222;
             font-weight: 500;
+            transition: all 0.2s;
         }
         .key.wide { 
             min-width: 38px; 
             font-size: 12.5px; 
             padding: 7px 3px;
         }
-        .key.used { 
+        .key.correct { 
+            background: #538d4e !important; 
+            color: #fff; 
+        }
+        .key.present { 
+            background: #b59f3b !important; 
+            color: #fff; 
+        }
+        .key.absent { 
             background: #555 !important; 
             color: #aaa; 
         }
@@ -158,14 +167,13 @@
         const resultTitle = document.getElementById('result-title');
         const resultText = document.getElementById('result-text');
 
-        // Сообщения при победе
+        // Сообщения при победе и поражении
         const winMessages = [
             "Моря, ты молодец ❤️",
             "Мэгги продолжай в том же духе 🎊",
             "Мо, тебе сегодня везёт 🍀"
         ];
 
-        // Сообщения при поражении
         const loseMessages = [
             "Моря, не сдавайся ✨",
             "Маргоша у тебя всё получится! 😉"
@@ -179,7 +187,6 @@
         }
         const tiles = document.querySelectorAll('.tile');
 
-        // Клавиатура
         const layout = [
             ["Й","Ц","У","К","Е","Н","Г","Ш","Щ","З","Х","Ъ"],
             ["Ф","Ы","В","А","П","Р","О","Л","Д","Ж","Э"],
@@ -244,6 +251,7 @@
             const letterCount = {};
             for (let char of targetWord) letterCount[char] = (letterCount[char] || 0) + 1;
 
+            // Сначала зелёные (correct)
             for (let i = 0; i < 5; i++) {
                 const tile = tiles[rowStart + i];
                 const letter = currentGuess[i];
@@ -254,6 +262,7 @@
                 }
             }
 
+            // Потом жёлтые и серые
             for (let i = 0; i < 5; i++) {
                 const tile = tiles[rowStart + i];
                 const letter = currentGuess[i];
@@ -292,16 +301,23 @@
             }
         }
 
+        // Обновление клавиатуры с правильными цветами
         function updateKeyboard(letter, status) {
-            if (status === 'absent') {
-                document.querySelectorAll('.key').forEach(key => {
-                    if (key.textContent === letter && 
-                        !key.classList.contains('correct') && 
-                        !key.classList.contains('present')) {
-                        key.classList.add('used');
+            document.querySelectorAll('.key').forEach(key => {
+                if (key.textContent === letter) {
+                    if (status === 'correct') {
+                        key.classList.add('correct');
+                        key.classList.remove('present', 'absent');
+                    } 
+                    else if (status === 'present' && !key.classList.contains('correct')) {
+                        key.classList.add('present');
+                        key.classList.remove('absent');
+                    } 
+                    else if (status === 'absent' && !key.classList.contains('correct') && !key.classList.contains('present')) {
+                        key.classList.add('absent');
                     }
-                });
-            }
+                }
+            });
         }
 
         function showMessage(text, color = '#fff') {
