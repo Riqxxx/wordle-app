@@ -2,62 +2,121 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Wordle</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            margin: 0; padding: 0; background: #121213; color: #fff;
-            font-family: Arial, sans-serif; display: flex; flex-direction: column;
-            height: 100vh; overflow: hidden;
+            margin: 0; 
+            padding: 0; 
+            background: #121213; 
+            color: #fff;
+            font-family: Arial, sans-serif; 
+            display: flex; 
+            flex-direction: column;
+            height: 100vh; 
+            overflow: hidden;
         }
         header {
-            text-align: center; padding: 12px; font-size: 22px; background: #1f1f1f;
+            text-align: center; 
+            padding: 12px; 
+            font-size: 22px; 
+            background: #1f1f1f;
         }
         .grid {
-            display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
-            padding: 15px; max-width: 340px; margin: 0 auto;
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 6px;
+            padding: 15px; 
+            max-width: 340px; 
+            margin: 0 auto;
         }
         .tile {
-            width: 58px; height: 58px; border: 2px solid #3a3a3c;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 26px; font-weight: bold; text-transform: uppercase;
+            width: 58px; 
+            height: 58px; 
+            border: 2px solid #3a3a3c;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 26px; 
+            font-weight: bold; 
+            text-transform: uppercase;
         }
         .tile.correct { background: #538d4e; border-color: #538d4e; color: #fff; }
         .tile.present { background: #b59f3b; border-color: #b59f3b; color: #fff; }
         .tile.absent { background: #3a3a3c; border-color: #3a3a3c; color: #fff; }
 
+        /* Компактная клавиатура */
         .keyboard {
-            padding: 8px 6px; background: #1f1f1f; margin-top: auto;
+            padding: 6px 4px 12px; 
+            background: #1f1f1f; 
+            margin-top: auto;
         }
         .row {
-            display: flex; justify-content: center; gap: 4px; margin-bottom: 6px;
+            display: flex; 
+            justify-content: center; 
+            gap: 3px; 
+            margin-bottom: 4px;
         }
         .key {
-            background: #3a3a3c; color: #fff; padding: 13px 8px; font-size: 17px;
-            min-width: 28px; text-align: center; border-radius: 5px; cursor: pointer;
-            user-select: none; box-shadow: 0 2px 0 #222;
+            background: #3a3a3c; 
+            color: #fff; 
+            padding: 10px 5px; 
+            font-size: 15px;
+            min-width: 24px; 
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center; 
+            border-radius: 4px; 
+            cursor: pointer;
+            user-select: none; 
+            box-shadow: 0 2px 0 #222;
+            font-weight: 500;
         }
-        .key.wide { min-width: 48px; font-size: 15px; }
-        .key.used { background: #555 !important; color: #aaa; } /* Более тёмно-серый */
+        .key.wide { 
+            min-width: 42px; 
+            font-size: 13.5px; 
+            padding: 10px 4px;
+        }
+        .key.used { 
+            background: #555 !important; 
+            color: #aaa; 
+        }
 
         #message {
-            text-align: center; padding: 8px; font-size: 18px; min-height: 28px;
+            text-align: center; 
+            padding: 8px; 
+            font-size: 18px; 
+            min-height: 28px;
         }
 
         /* Окно результата */
         #result {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.92); display: none; align-items: center;
-            justify-content: center; z-index: 100; flex-direction: column;
-            text-align: center; padding: 20px;
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92); 
+            display: none; 
+            align-items: center;
+            justify-content: center; 
+            z-index: 100; 
+            flex-direction: column;
+            text-align: center; 
+            padding: 20px;
         }
         #result.show { display: flex; }
         #result h2 { font-size: 28px; margin: 10px 0; }
-        #result p { font-size: 20px; margin: 10px 0; }
+        #result p { font-size: 22px; margin: 15px 0; line-height: 1.4; }
         #play-again {
-            margin-top: 20px; padding: 14px 30px; font-size: 18px;
-            background: #538d4e; color: white; border: none; border-radius: 8px;
+            margin-top: 25px; 
+            padding: 14px 30px; 
+            font-size: 18px;
+            background: #538d4e; 
+            color: white; 
+            border: none; 
+            border-radius: 8px;
             cursor: pointer;
         }
     </style>
@@ -81,21 +140,32 @@
     </div>
 
     <script>
-
-        // === СПИСОК СЛОВ (обновляй через convert_words.py) ===
+        // === СПИСОК СЛОВ ===
         const words = ["длина", "кокос", "пенис", "аббат", "абвер", "абзац", "аборт", "абрис", "аванс", "аврал", "автор", "агент", "агнец", "адепт", "адрес", "азарт", "актер", "акция", "алмаз", "аллея", "алтар", "алтын", "амбар", "ампер", "ангел", "анонс", "антон", "арбуз", "аргон", "арена", "арест", "астра", "атлас", "атлет", "афера", "афиша", "багаж", "багет", "базис", "байка", "бакал", "балет", "балка", "балон", "балык", "банан", "банка", "баржа", "барон", "басня", "батон", "башня", "бегун", "бедро", "белка", "берег", "берет", "бетон", "бидон", "бизон", "билет", "бирка", "битва", "блеск", "блоха", "блюдо", "бобер", "богач", "бокал", "бомба", "бонус", "борец", "бочон", "брага", "бремя", "брюхо", "будка", "буква", "букет", "булка", "буран", "бухта", "вагон", "валет", "валик", "валун", "варяг", "вахта", "ведро", "вежда", "веник", "весна", "ветер", "взвод", "взрыв", "взмах", "взнос", "вилка", "вирус", "виток", "вклад", "влага", "вобла", "водка", "возня", "волна", "волок", "ворон", "ворот", "время", "выбор", "вывод", "выгон", "выдох", "выкуп", "вынос", "вырез", "высот", "газон", "гайка", "галка", "гамак", "гамма", "гараж", "гвард", "гений", "герой", "гидра", "глава", "глина", "глушь", "гномы", "голос", "гонка", "город", "горло", "гость", "грань", "груда", "груша", "гудок", "гуляш", "давка", "дамба", "даром", "дверь", "дебют", "девиз", "декор", "делец", "десна", "детка", "диван", "дизел", "длина", "днище", "добор", "довод", "дождь", "дозор", "докер", "домик", "донор", "доска", "доход", "драка", "драже", "дрель", "дробь", "други", "дубок", "душок", "жажда", "жакет", "жатва", "жгуты", "жизнь", "жилка", "жираф", "жокей", "жрица", "забег", "забой", "забор", "завет", "завод", "завуч", "загон", "задор", "заезд", "заика", "зайка", "закон", "закут", "замес", "замок", "замша", "занос", "запал", "запах", "запор", "заряд", "засов", "зачет", "зверь", "звено", "зебра", "зенит", "зерно", "злоба", "знамя", "знойк", "зовут", "золот", "зрачк", "зубец", "идеал", "изгиб", "износ", "изъян", "икона", "искра", "кабан", "казна", "калач", "камин", "канал", "канат", "капля", "карта", "касса", "катер", "кепка", "кивок", "киоск", "кисть", "кладь", "класс", "книга", "ковер", "козел", "койка", "кокос", "колба", "колос", "комар", "конец", "копия", "копье", "короб", "кость", "кошка", "кража", "крест", "кровь", "крыло", "крыша", "кулак", "купол", "кусок", "кухня", "лавка", "лампа", "лапша", "лента", "лимон", "линия", "лодка", "ложка", "ломка", "лучик", "лыжня", "любов", "маляр", "марка", "маска", "масло", "метка", "место", "мечта", "минус", "мирок", "миска", "модем", "мороз", "мосты", "музей", "мумия", "навык", "нагар", "налог", "напор", "наряд", "насос", "наука", "невод", "недра", "нефть", "нитка", "ножик", "норма", "носка", "обвал", "обмен", "обряд", "обувь", "овраг", "огонь", "озеро", "оклад", "округ", "олень", "омлет", "опора", "орден", "осень", "отбор", "отказ", "отряд", "охота", "пакет", "палец", "палка", "панно", "парус", "паста", "пачка", "певец", "песок", "петля", "пирог", "пламя", "плата", "плечо", "плита", "повод", "погон", "поезд", "покой", "полка", "порог", "порох", "поток", "почва", "право", "пресс", "приют", "проба", "пушка", "пчела", "пятно", "разок", "рамка", "раунд", "ребро", "режим", "резец", "рельс", "репка", "речка", "робот", "ровно", "родня", "рожок", "рознь", "роман", "ручка", "рыбак", "рынок", "рядок", "салат", "сапог", "сарай", "сахар", "сборы", "свеча", "свист", "связь", "сезон", "семья", "серия", "сетка", "силос", "синяк", "скала", "склон", "скоба", "скора", "слава", "слеза", "слово", "смена", "смысл", "снега", "собор", "совет", "сокол", "сосна", "спина", "спорт", "среда", "стадо", "старт", "ствол", "стена", "стихи", "страх", "сцена", "схема", "сырок", "табак", "тазик", "танец", "тариф", "текст", "тепло", "тесто", "титан", "ткань", "товар", "топор", "точка", "трава", "тропа", "труба", "туман", "уголь", "удача", "уклон", "улица", "урокк", "утюгг", "факел", "фауна", "ферма", "фильм", "финиш", "фишка", "форма", "фронт", "фрукт", "халат", "хвост", "холод", "хомяк", "хруст", "цветы", "чашка", "червь", "число", "чулок", "шапка", "шахта", "школа", "шланг", "шпага", "шпион", "штора", "шутка", "щепка", "щетка", "юрист", "ягода", "якорь"];
 
         let targetWord = words[Math.floor(Math.random() * words.length)].toUpperCase();
         let currentRow = 0;
         let currentGuess = [];
         let gameOver = false;
-        let usedLetters = new Set();
 
         const grid = document.getElementById('grid');
         const messageEl = document.getElementById('message');
         const resultScreen = document.getElementById('result');
         const resultTitle = document.getElementById('result-title');
         const resultText = document.getElementById('result-text');
+
+        // Сообщения при победе
+        const winMessages = [
+            "Моря, ты молодец ❤️",
+            "Мэгги продолжай в том же духе 🎊",
+            "Мо, тебе сегодня везёт 🍀"
+        ];
+
+        // Сообщения при поражении
+        const loseMessages = [
+            "Моря, не сдавайся ✨",
+            "Маргоша у тебя всё получится! 😉"
+        ];
 
         // Создаём сетку
         for (let i = 0; i < 25; i++) {
@@ -105,7 +175,7 @@
         }
         const tiles = document.querySelectorAll('.tile');
 
-        // Русская клавиатура (компактная)
+        // Клавиатура
         const layout = [
             ["Й","Ц","У","К","Е","Н","Г","Ш","Щ","З","Х","Ъ"],
             ["Ф","Ы","В","А","П","Р","О","Л","Д","Ж","Э"],
@@ -127,8 +197,8 @@
                 });
             });
 
-            // Enter и Backspace
             const row3 = rows[2];
+            
             const enter = document.createElement('div');
             enter.className = 'key wide';
             enter.textContent = 'Enter';
@@ -170,7 +240,7 @@
             const letterCount = {};
             for (let char of targetWord) letterCount[char] = (letterCount[char] || 0) + 1;
 
-            // Сначала правильные на месте (зелёный)
+            // Зелёные буквы
             for (let i = 0; i < 5; i++) {
                 const tile = tiles[rowStart + i];
                 const letter = currentGuess[i];
@@ -181,7 +251,7 @@
                 }
             }
 
-            // Потом жёлтый и серый
+            // Жёлтые и серые
             for (let i = 0; i < 5; i++) {
                 const tile = tiles[rowStart + i];
                 const letter = currentGuess[i];
@@ -197,7 +267,6 @@
                 }
             }
 
-            // Победа
             if (guess === targetWord) {
                 gameOver = true;
                 showWinScreen();
@@ -224,7 +293,9 @@
         function updateKeyboard(letter, status) {
             if (status === 'absent') {
                 document.querySelectorAll('.key').forEach(key => {
-                    if (key.textContent === letter && !key.classList.contains('correct') && !key.classList.contains('present')) {
+                    if (key.textContent === letter && 
+                        !key.classList.contains('correct') && 
+                        !key.classList.contains('present')) {
                         key.classList.add('used');
                     }
                 });
@@ -237,23 +308,27 @@
             setTimeout(() => messageEl.textContent = '', 2000);
         }
 
+        function getRandomMessage(messages) {
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
         function showWinScreen() {
             resultTitle.textContent = "🎉 Поздравляем!";
             resultTitle.style.color = "#538d4e";
-            resultText.textContent = `Вы угадали слово за ${currentRow + 1} попыток!`;
+            resultText.textContent = getRandomMessage(winMessages);
             resultScreen.classList.add('show');
         }
 
         function showLoseScreen() {
             resultTitle.textContent = "😔 Не угадали";
             resultTitle.style.color = "#ff6666";
-            resultText.innerHTML = `Правильное слово было:<br><b>${targetWord}</b>`;
+            resultText.textContent = getRandomMessage(loseMessages);
             resultScreen.classList.add('show');
         }
 
         // Кнопка "Играть снова"
         document.getElementById('play-again').onclick = () => {
-            location.reload(); // Простой перезапуск
+            location.reload();
         };
 
         // Telegram WebApp
@@ -261,7 +336,7 @@
         tg.expand();
         tg.ready();
 
-        // Запуск игры
+        // Запуск
         createKeyboard();
         showMessage('Угадайте слово за 5 попыток!', '#fff');
     </script>
