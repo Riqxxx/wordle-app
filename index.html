@@ -46,7 +46,7 @@
         .tile.present { background: #b59f3b; border-color: #b59f3b; color: #fff; }
         .tile.absent { background: #3a3a3c; border-color: #3a3a3c; color: #fff; }
 
-        /* Компактная клавиатура с улучшенным отображением букв */
+        /* Компактная клавиатура */
         .keyboard {
             padding: 5px 3px 8px; 
             background: #1f1f1f; 
@@ -81,12 +81,9 @@
             font-size: 12.8px; 
             padding: 7px 3px;
         }
-
-        /* Цвета только для клавиатуры */
         .key.correct { 
             background: #538d4e !important; 
             color: #fff; 
-            border-color: #538d4e;
         }
         .key.absent { 
             background: #555 !important; 
@@ -100,11 +97,12 @@
             min-height: 26px;
         }
 
+        /* Модальное окно результата */
         #result {
             position: fixed; 
             top: 0; left: 0; 
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.93); 
+            background: rgba(0, 0, 0, 0.92); 
             display: none; 
             align-items: center;
             justify-content: center; 
@@ -113,17 +111,21 @@
             text-align: center; 
             padding: 20px;
         }
-        #result.show { display: flex; }
-        #result h2 { font-size: 27px; margin: 10px 0; }
+        #result.show { 
+            display: flex; 
+        }
+        #result h2 { 
+            font-size: 28px; 
+            margin: 10px 0 8px; 
+        }
         #result p { 
             font-size: 21px; 
-            margin: 14px 0; 
-            line-height: 1.4; 
+            margin: 12px 0 25px; 
+            line-height: 1.45; 
         }
         #play-again {
-            margin-top: 22px; 
-            padding: 13px 30px; 
-            font-size: 17px;
+            padding: 14px 34px; 
+            font-size: 17.5px;
             background: #538d4e; 
             color: white; 
             border: none; 
@@ -143,6 +145,7 @@
         <div class="row" id="row3"></div>
     </div>
 
+    <!-- Модальное окно результата -->
     <div id="result">
         <h2 id="result-title"></h2>
         <p id="result-text"></p>
@@ -174,6 +177,7 @@
             "Маргоша у тебя всё получится! 😉"
         ];
 
+        // Создаём игровое поле
         for (let i = 0; i < 25; i++) {
             const tile = document.createElement('div');
             tile.className = 'tile';
@@ -244,7 +248,7 @@
             const letterCount = {};
             for (let char of targetWord) letterCount[char] = (letterCount[char] || 0) + 1;
 
-            // Сначала зелёные
+            // Зелёные буквы
             for (let i = 0; i < 5; i++) {
                 const tile = tiles[rowStart + i];
                 const letter = currentGuess[i];
@@ -255,7 +259,7 @@
                 }
             }
 
-            // Потом жёлтые и серые на поле
+            // Жёлтые и серые
             for (let i = 0; i < 5; i++) {
                 const tile = tiles[rowStart + i];
                 const letter = currentGuess[i];
@@ -298,8 +302,7 @@
                 if (key.textContent === letter) {
                     if (status === 'correct') {
                         key.classList.add('correct');
-                    } else if (status === 'absent' && 
-                               !key.classList.contains('correct')) {
+                    } else if (status === 'absent' && !key.classList.contains('correct')) {
                         key.classList.add('absent');
                     }
                 }
@@ -330,7 +333,10 @@
             resultScreen.classList.add('show');
         }
 
-        document.getElementById('play-again').onclick = () => location.reload();
+        // Кнопка "Играть снова" работает только в модальном окне
+        document.getElementById('play-again').onclick = () => {
+            location.reload();
+        };
 
         const tg = window.Telegram.WebApp;
         tg.expand();
